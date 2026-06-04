@@ -1,304 +1,266 @@
-const STORAGE_KEY = new URLSearchParams(window.location.search).has("preview")
-  ? "cartaoTodosLeadsPreview"
-  : "cartaoTodosLeads";
-const SESSION_KEY = "cartaoTodosSession";
-
-const ACCOUNTS = {
-  amanda: {
-    name: "Amanda",
-    role: "user",
-    roleLabel: "Cadastro",
-    password: "Amandacdt@",
-  },
-  giovana: {
-    name: "Giovana",
-    role: "user",
-    roleLabel: "Cadastro",
-    password: "Giovana@cdt.",
-  },
-  "breno.portes": {
-    name: "Breno",
-    role: "admin",
-    roleLabel: "Gerencial",
-    password: "gestao147",
-  },
-};
+const API_BASE = "https://rhzayzebnmiuweffobzn.supabase.co/functions/v1/cartao-leads";
+const SESSION_KEY = "leadprospecSession";
+const SYNC_INTERVAL_MS = 1000;
 
 const state = {
-  currentUser: null,
+  session: null,
   leads: [],
   drawing: false,
+  syncing: false,
+  syncTimer: null,
 };
 
-const loginScreen = document.querySelector("#login-screen");
-const appScreen = document.querySelector("#app-screen");
-const loginForm = document.querySelector("#login-form");
-const loginUser = document.querySelector("#login-user");
-const loginPassword = document.querySelector("#login-password");
-const loginMessage = document.querySelector("#login-message");
-const sessionName = document.querySelector("#session-name");
-const sessionRole = document.querySelector("#session-role");
-const logoutButton = document.querySelector("#logout-button");
+const $ = (id) => document.getElementById(id);
 
-const userView = document.querySelector("#user-view");
-const adminView = document.querySelector("#admin-view");
-const leadForm = document.querySelector("#lead-form");
-const leadName = document.querySelector("#lead-name");
-const leadCpf = document.querySelector("#lead-cpf");
-const leadPhone = document.querySelector("#lead-phone");
-const leadMessage = document.querySelector("#lead-message");
-const saveLeadButton = document.querySelector("#save-lead-button");
+const loginScreen = $("login-screen");
+const appScreen = $("app-screen");
+const userView = $("user-view");
+const adminView = $("admin-view");
+const loginForm = $("login-form");
+const leadForm = $("lead-form");
+const toast = $("toast");
+const loginUser = $("login-user");
+const loginPassword = $("login-password");
+const loginMessage = $("login-message");
+const leadName = $("lead-name");
+const leadCpf = $("lead-cpf");
+const leadPhone = $("lead-phone");
+const leadMessage = $("lead-message");
+const saveLead = $("save-lead");
+const leadsTable = $("leads-table");
+const tableWrap = $("table-wrap");
+const ownerFilter = $("owner-filter");
+const participants = $("participants");
+const countdown = $("countdown");
+const rollingName = $("rolling-name");
+const winnerName = $("winner-name");
+const drawButton = $("draw-button");
 
-const totalLeads = document.querySelector("#total-leads");
-const amandaLeads = document.querySelector("#amanda-leads");
-const giovannaLeads = document.querySelector("#giovanna-leads");
-const ownerFilter = document.querySelector("#owner-filter");
-const leadsTable = document.querySelector("#leads-table");
-const emptyLeads = document.querySelector("#empty-leads");
-const exportButton = document.querySelector("#export-button");
-const tabButtons = document.querySelectorAll(".tab-button");
-const panels = document.querySelectorAll(".tab-panel");
-
-const body = document.body;
-const countdown = document.querySelector("#countdown");
-const rollingName = document.querySelector("#rolling-name");
-const winnerName = document.querySelector("#winner-name");
-const drawButton = document.querySelector("#draw-button");
-const participantsStrip = document.querySelector("#participants-strip");
-const toast = document.querySelector("#toast");
-
-function onlyDigits(value) {
-  return value.replace(/\D/g, "");
+function digits(value) {
+  return String(value || "").replace(/\D/g, "");
 }
 
-function normalizeLeadName(value) {
-  return value
-    .trim()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, " ")
-    .toLowerCase();
-}
-
-function formatCpf(value) {
-  const digits = onlyDigits(value).slice(0, 11);
-  return digits
+function cpf(value) {
+  return digits(value)
+    .slice(0, 11)
     .replace(/(\d{3})(\d)/, "$1.$2")
     .replace(/(\d{3})(\d)/, "$1.$2")
     .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
 }
 
-function formatPhone(value) {
-  const digits = onlyDigits(value).slice(0, 11);
+function phone(value) {
+  const clean = digits(value).slice(0, 11);
 
-  if (digits.length <= 10) {
-    return digits
-      .replace(/(\d{2})(\d)/, "($1) $2")
-      .replace(/(\d{4})(\d)/, "$1-$2");
+  if (clean.length <= 10) {
+    return clean.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{4})(\d)/, "$1-$2");
   }
 
-  return digits
-    .replace(/(\d{2})(\d)/, "($1) $2")
-    .replace(/(\d{5})(\d)/, "$1-$2");
+  return clean.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2");
 }
 
-function whatsappUrl(phone) {
-  const digits = onlyDigits(phone);
-  const number = digits.startsWith("55") && digits.length > 11 ? digits : `55${digits}`;
-  return `https://wa.me/${number}`;
+function whatsapp(value) {
+  const clean = digits(value);
+  return `https://wa.me/${clean.startsWith("55") && clean.length > 11 ? clean : `55${clean}`}`;
 }
 
-function formatDate(isoDate) {
+function formatDate(value) {
   return new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "short",
     timeStyle: "short",
-  }).format(new Date(isoDate));
+  }).format(new Date(value));
 }
 
-function loadLeads() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    state.leads = Array.isArray(parsed)
-      ? parsed.map((lead) =>
-          lead.owner === "giovanna" ? { ...lead, owner: "giovana", ownerName: "Giovana" } : lead,
-        )
-      : [];
-    saveLeads();
-  } catch {
-    state.leads = [];
-  }
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (match) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  })[match]);
 }
 
-function saveLeads() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.leads));
-}
-
-function showToast(message) {
-  toast.textContent = message;
+function showToast(text) {
+  toast.textContent = text;
   toast.classList.add("show");
-  window.setTimeout(() => toast.classList.remove("show"), 2600);
+  setTimeout(() => toast.classList.remove("show"), 2600);
 }
 
-function getSession() {
-  const userKey = sessionStorage.getItem(SESSION_KEY);
-  return userKey ? ACCOUNTS[userKey] && { key: userKey, ...ACCOUNTS[userKey] } : null;
+async function api(path, options = {}) {
+  const headers = { "Content-Type": "application/json" };
+
+  if (state.session?.token) {
+    headers.Authorization = `Bearer ${state.session.token}`;
+  }
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: { ...headers, ...(options.headers || {}) },
+  });
+  const text = await response.text();
+  let data = {};
+
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = { message: text };
+  }
+
+  if (!response.ok) {
+    throw new Error(data.message || "Erro na solicitação.");
+  }
+
+  return data;
 }
 
-function setSession(userKey) {
-  sessionStorage.setItem(SESSION_KEY, userKey);
-  state.currentUser = { key: userKey, ...ACCOUNTS[userKey] };
+function saveSession(session) {
+  state.session = session;
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
   renderSession();
 }
 
 function clearSession() {
+  stopCloudSync();
+  state.session = null;
+  state.leads = [];
   sessionStorage.removeItem(SESSION_KEY);
-  state.currentUser = null;
   renderSession();
 }
 
-function renderSession() {
-  const user = state.currentUser;
-  loginScreen.hidden = Boolean(user);
-  appScreen.hidden = !user;
+function loadSession() {
+  try {
+    state.session = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null");
+  } catch {
+    state.session = null;
+  }
+}
 
-  if (!user) {
+function renderSession() {
+  const session = state.session;
+  loginScreen.hidden = Boolean(session);
+  appScreen.hidden = !session;
+
+  if (!session) {
     loginPassword.value = "";
     loginMessage.textContent = "";
-    loginUser.focus();
+    stopCloudSync();
     return;
   }
 
-  sessionName.textContent = user.name;
-  sessionRole.textContent = user.roleLabel;
-  userView.hidden = user.role !== "user";
-  adminView.hidden = user.role !== "admin";
+  $("session-name").textContent = session.user.name;
+  $("session-role").textContent = session.user.roleLabel;
+  userView.hidden = session.user.role !== "user";
+  adminView.hidden = session.user.role !== "admin";
 
-  if (user.role === "admin") {
-    renderAdmin();
+  if (session.user.role === "admin") {
+    loadLeads();
+    startCloudSync();
   } else {
+    stopCloudSync();
     leadForm.reset();
     leadMessage.textContent = "";
-    saveLeadButton.disabled = true;
-    leadName.focus();
+    saveLead.disabled = true;
   }
 }
 
-function validateLeadForm() {
-  const nameReady = leadName.value.trim().length > 1;
-  const cpfReady = onlyDigits(leadCpf.value).length === 11;
-  const phoneReady = onlyDigits(leadPhone.value).length >= 10;
-  const duplicateMessage = getDuplicateLeadMessage();
-  const ready = nameReady && cpfReady && phoneReady && !duplicateMessage;
-
-  leadMessage.textContent = duplicateMessage;
-  saveLeadButton.disabled = !ready;
+function validateLead() {
+  const ready =
+    leadName.value.trim().length > 1 &&
+    digits(leadCpf.value).length === 11 &&
+    digits(leadPhone.value).length >= 10;
+  saveLead.disabled = !ready;
   return ready;
 }
 
-function getDuplicateLeadMessage() {
-  const name = normalizeLeadName(leadName.value);
-  const cpf = onlyDigits(leadCpf.value);
+function startCloudSync() {
+  stopCloudSync();
 
-  if (name.length > 1 && state.leads.some((lead) => normalizeLeadName(lead.name) === name)) {
-    return "Este nome já foi cadastrado.";
-  }
+  state.syncTimer = setInterval(() => {
+    const shouldSync =
+      state.session?.user?.role === "admin" &&
+      !state.drawing &&
+      !document.hidden;
 
-  if (cpf.length === 11 && state.leads.some((lead) => onlyDigits(lead.cpf) === cpf)) {
-    return "Este CPF já foi cadastrado.";
-  }
-
-  return "";
+    if (shouldSync) {
+      loadLeads({ silent: true });
+    }
+  }, SYNC_INTERVAL_MS);
 }
 
-function createLead() {
-  const now = new Date().toISOString();
-  return {
-    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-    name: leadName.value.trim(),
-    cpf: formatCpf(leadCpf.value),
-    phone: formatPhone(leadPhone.value),
-    owner: state.currentUser.key,
-    ownerName: state.currentUser.name,
-    createdAt: now,
-  };
+function stopCloudSync() {
+  if (state.syncTimer) {
+    clearInterval(state.syncTimer);
+    state.syncTimer = null;
+  }
+}
+
+async function loadLeads({ silent = false } = {}) {
+  if (state.syncing) {
+    return;
+  }
+
+  state.syncing = true;
+
+  try {
+    const data = await api("/api/leads");
+    state.leads = data.leads || [];
+    renderAdmin();
+  } catch (error) {
+    if (!silent) {
+      showToast(error.message);
+    }
+
+    if (String(error.message).toLowerCase().includes("sessão")) {
+      clearSession();
+    }
+  } finally {
+    state.syncing = false;
+  }
 }
 
 function renderAdmin() {
-  renderStats();
+  $("total-leads").textContent = state.leads.length;
+  $("amanda-leads").textContent = state.leads.filter((lead) => lead.owner === "amanda").length;
+  $("giovana-leads").textContent = state.leads.filter((lead) => lead.owner === "giovana").length;
   renderTable();
   renderParticipants();
 }
 
-function renderStats() {
-  totalLeads.textContent = state.leads.length;
-  amandaLeads.textContent = state.leads.filter((lead) => lead.owner === "amanda").length;
-  giovannaLeads.textContent = state.leads.filter((lead) => lead.owner === "giovana").length;
-}
-
-function getFilteredLeads() {
-  const filter = ownerFilter.value;
-  if (filter === "all") {
-    return [...state.leads];
-  }
-
-  return state.leads.filter((lead) => lead.owner === filter);
+function visibleLeads() {
+  return ownerFilter.value === "all" ? state.leads : state.leads.filter((lead) => lead.owner === ownerFilter.value);
 }
 
 function renderTable() {
-  const filtered = getFilteredLeads().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  leadsTable.innerHTML = "";
-  emptyLeads.parentElement.classList.toggle("empty", filtered.length === 0);
-
-  filtered.forEach((lead) => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${escapeHtml(lead.name)}</td>
-      <td>${escapeHtml(lead.cpf)}</td>
-      <td><a class="whatsapp-link" href="${whatsappUrl(lead.phone)}" target="_blank" rel="noopener">${escapeHtml(lead.phone)}</a></td>
-      <td>${escapeHtml(lead.ownerName)}</td>
-      <td>${escapeHtml(formatDate(lead.createdAt))}</td>
-      <td><button class="danger-button" type="button" data-delete-lead="${escapeHtml(lead.id)}">Excluir</button></td>
-    `;
-    leadsTable.appendChild(row);
-  });
-}
-
-function deleteLead(leadId) {
-  const lead = state.leads.find((item) => item.id === leadId);
-
-  if (!lead) {
-    return;
-  }
-
-  const shouldDelete = window.confirm(`Excluir o cadastro de ${lead.name}?`);
-
-  if (!shouldDelete) {
-    return;
-  }
-
-  state.leads = state.leads.filter((item) => item.id !== leadId);
-  saveLeads();
-  renderAdmin();
-  showToast("Cadastro excluído.");
+  const rows = visibleLeads();
+  tableWrap.classList.toggle("is-empty", rows.length === 0);
+  leadsTable.innerHTML = rows
+    .map((lead) => `
+      <tr>
+        <td>${escapeHtml(lead.name)}</td>
+        <td>${cpf(lead.cpf)}</td>
+        <td><a class="wa" target="_blank" rel="noopener" href="${whatsapp(lead.phone)}">${phone(lead.phone)}</a></td>
+        <td>${escapeHtml(lead.owner_name)}</td>
+        <td>${formatDate(lead.created_at)}</td>
+        <td><button class="danger" data-delete="${escapeHtml(lead.id)}" type="button">Excluir</button></td>
+      </tr>
+    `)
+    .join("");
 }
 
 function renderParticipants() {
-  participantsStrip.innerHTML = "";
+  participants.innerHTML = "";
 
-  if (state.leads.length === 0) {
-    const empty = document.createElement("span");
-    empty.className = "participant-pill";
-    empty.textContent = "Sem participantes";
-    participantsStrip.appendChild(empty);
+  if (!state.leads.length) {
+    participants.innerHTML = '<span class="pill">Sem participantes</span>';
     rollingName.textContent = "Aguardando participantes";
     return;
   }
 
   state.leads.forEach((lead) => {
     const pill = document.createElement("span");
-    pill.className = "participant-pill";
+    pill.className = "pill";
     pill.textContent = lead.name;
-    participantsStrip.appendChild(pill);
+    participants.appendChild(pill);
   });
 
   if (!state.drawing && !winnerName.textContent) {
@@ -306,72 +268,36 @@ function renderParticipants() {
   }
 }
 
-function escapeHtml(value) {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
 function exportCsv() {
-  if (state.leads.length === 0) {
+  if (!state.leads.length) {
     showToast("Nenhum lead para exportar.");
     return;
   }
 
   const rows = [
     ["Nome", "CPF", "Telefone", "Responsável", "Data"],
-    ...state.leads.map((lead) => [lead.name, lead.cpf, lead.phone, lead.ownerName, formatDate(lead.createdAt)]),
+    ...state.leads.map((lead) => [lead.name, cpf(lead.cpf), phone(lead.phone), lead.owner_name, formatDate(lead.created_at)]),
   ];
-  const csv = `\ufeff${rows.map((row) => row.map(csvCell).join(";")).join("\r\n")}`;
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  const date = new Date().toISOString().slice(0, 10);
-
-  anchor.href = url;
-  anchor.download = `leads-cartao-de-todos-${date}.csv`;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
+  const csv = `\ufeff${rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(";")).join("\r\n")}`;
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  link.download = `leadprospec-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
   showToast("Planilha exportada.");
-}
-
-function csvCell(value) {
-  return `"${String(value).replace(/"/g, '""')}"`;
-}
-
-function switchTab(tabName) {
-  tabButtons.forEach((button) => {
-    const active = button.dataset.tab === tabName;
-    button.classList.toggle("active", active);
-    button.setAttribute("aria-selected", String(active));
-  });
-
-  panels.forEach((panel) => {
-    const active = panel.id === `panel-${tabName}`;
-    panel.classList.toggle("active", active);
-    panel.hidden = !active;
-  });
-
-  if (tabName === "draw") {
-    renderParticipants();
-  }
 }
 
 function randomLead() {
   return state.leads[Math.floor(Math.random() * state.leads.length)];
 }
 
-function runDraw() {
+function draw() {
   if (state.drawing) {
     return;
   }
 
-  if (state.leads.length === 0) {
+  if (!state.leads.length) {
     showToast("Cadastre leads antes do sorteio.");
     return;
   }
@@ -379,40 +305,36 @@ function runDraw() {
   state.drawing = true;
   drawButton.disabled = true;
   winnerName.textContent = "";
-  body.classList.add("drawing");
+  document.body.classList.add("drawing");
 
   let seconds = 10;
   countdown.textContent = seconds;
   rollingName.textContent = randomLead().name;
 
-  const nameTicker = window.setInterval(() => {
+  const names = setInterval(() => {
     rollingName.textContent = randomLead().name;
   }, 90);
 
-  const timer = window.setInterval(() => {
+  const timer = setInterval(() => {
     seconds -= 1;
     countdown.textContent = seconds;
 
     if (seconds === 0) {
-      window.clearInterval(timer);
-      window.clearInterval(nameTicker);
-      finishDraw(randomLead());
+      clearInterval(timer);
+      clearInterval(names);
+      const winner = randomLead();
+      state.drawing = false;
+      drawButton.disabled = false;
+      document.body.classList.remove("drawing");
+      rollingName.textContent = "Ganhador";
+      winnerName.textContent = winner.name;
+      confetti();
+      showToast(`${winner.name} ganhou o sorteio.`);
     }
   }, 1000);
 }
 
-function finishDraw(winner) {
-  state.drawing = false;
-  drawButton.disabled = false;
-  body.classList.remove("drawing");
-  rollingName.textContent = "Ganhador";
-  winnerName.textContent = winner.name;
-  countdown.textContent = "0";
-  launchConfetti();
-  showToast(`${winner.name} ganhou o sorteio.`);
-}
-
-function launchConfetti() {
+function confetti() {
   const colors = ["#087a4d", "#d7b34c", "#2774b8", "#c94c41", "#0b9a5b"];
 
   for (let index = 0; index < 48; index += 1) {
@@ -422,74 +344,115 @@ function launchConfetti() {
     piece.style.background = colors[index % colors.length];
     piece.style.animationDelay = `${Math.random() * 0.35}s`;
     document.body.appendChild(piece);
-    window.setTimeout(() => piece.remove(), 2200);
+    setTimeout(() => piece.remove(), 2200);
   }
 }
 
-loginForm.addEventListener("submit", (event) => {
+loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const userKey = loginUser.value.trim().toLowerCase();
-  const account = ACCOUNTS[userKey];
+  loginMessage.textContent = "";
 
-  if (!account || account.password !== loginPassword.value) {
-    loginMessage.textContent = "Login ou senha inválidos.";
-    return;
+  try {
+    const session = await api("/api/login", {
+      method: "POST",
+      body: JSON.stringify({ login: loginUser.value, password: loginPassword.value }),
+    });
+    saveSession(session);
+    loginForm.reset();
+  } catch (error) {
+    loginMessage.textContent = error.message;
   }
-
-  setSession(userKey);
-  loginForm.reset();
 });
 
-logoutButton.addEventListener("click", clearSession);
-
-leadForm.addEventListener("input", validateLeadForm);
-
+$("logout").addEventListener("click", clearSession);
+leadForm.addEventListener("input", validateLead);
 leadCpf.addEventListener("input", () => {
-  leadCpf.value = formatCpf(leadCpf.value);
-  validateLeadForm();
+  leadCpf.value = cpf(leadCpf.value);
+  validateLead();
 });
-
 leadPhone.addEventListener("input", () => {
-  leadPhone.value = formatPhone(leadPhone.value);
-  validateLeadForm();
+  leadPhone.value = phone(leadPhone.value);
+  validateLead();
 });
 
-leadForm.addEventListener("submit", (event) => {
+leadForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  if (!validateLeadForm()) {
-    if (!leadMessage.textContent) {
-      leadMessage.textContent = "Preencha nome, CPF e telefone.";
-    }
+  if (!validateLead()) {
+    leadMessage.textContent = "Preencha nome, CPF e telefone.";
     return;
   }
 
-  state.leads.push(createLead());
-  saveLeads();
-  leadForm.reset();
-  saveLeadButton.disabled = true;
   leadMessage.textContent = "";
-  showToast("Lead cadastrado.");
+  saveLead.disabled = true;
+
+  try {
+    await api("/api/leads", {
+      method: "POST",
+      body: JSON.stringify({ name: leadName.value, cpf: leadCpf.value, phone: leadPhone.value }),
+    });
+    leadForm.reset();
+    showToast("Lead cadastrado.");
+  } catch (error) {
+    leadMessage.textContent = error.message;
+  } finally {
+    validateLead();
+  }
 });
 
 ownerFilter.addEventListener("change", renderTable);
-exportButton.addEventListener("click", exportCsv);
-drawButton.addEventListener("click", runDraw);
+$("export").addEventListener("click", exportCsv);
+drawButton.addEventListener("click", draw);
 
-leadsTable.addEventListener("click", (event) => {
-  const deleteButton = event.target.closest("[data-delete-lead]");
+window.addEventListener("focus", () => {
+  if (state.session?.user?.role === "admin" && !state.drawing) {
+    loadLeads({ silent: true });
+  }
+});
 
-  if (!deleteButton) {
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && state.session?.user?.role === "admin" && !state.drawing) {
+    loadLeads({ silent: true });
+  }
+});
+
+document.querySelectorAll(".tab").forEach((button) => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach((tab) => tab.classList.toggle("active", tab === button));
+    document.querySelectorAll(".panel-tab").forEach((panel) => {
+      const active = panel.id === `panel-${button.dataset.tab}`;
+      panel.hidden = !active;
+      panel.classList.toggle("active", active);
+    });
+
+    if (button.dataset.tab === "draw") {
+      renderParticipants();
+    }
+  });
+});
+
+leadsTable.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-delete]");
+
+  if (!button) {
     return;
   }
 
-  deleteLead(deleteButton.dataset.deleteLead);
+  const lead = state.leads.find((item) => item.id === button.dataset.delete);
+
+  if (!lead || !confirm(`Excluir o cadastro de ${lead.name}?`)) {
+    return;
+  }
+
+  try {
+    await api(`/api/leads/${lead.id}`, { method: "DELETE" });
+    state.leads = state.leads.filter((item) => item.id !== lead.id);
+    renderAdmin();
+    showToast("Cadastro excluído.");
+  } catch (error) {
+    showToast(error.message);
+  }
 });
 
-tabButtons.forEach((button) => {
-  button.addEventListener("click", () => switchTab(button.dataset.tab));
-});
-
-loadLeads();
-state.currentUser = getSession();
+loadSession();
 renderSession();

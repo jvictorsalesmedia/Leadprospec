@@ -3,172 +3,130 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Cartão de Todos | Leads</title>
+    <title>Leadprospec</title>
     <link rel="stylesheet" href="./styles.css" />
     <script src="./app.js" defer></script>
   </head>
   <body>
-    <div class="shell">
-      <section class="login-screen" id="login-screen">
-        <div class="brand-side">
-          <img src="./assets/logo.png" alt="Cartão de Todos" class="login-logo" />
-          <div class="brand-copy">
-            <p class="eyebrow">Campanha de leads</p>
-            <h1>Cadastro e sorteio</h1>
-          </div>
+    <section class="login" id="login-screen">
+      <div class="hero">
+        <img src="./assets/logo.png" alt="Cartão de Todos" class="logo" />
+        <p class="subtitle">Cartão de Todos</p>
+        <div class="brand">Leadprospec</div>
+      </div>
+
+      <main class="panel">
+        <div>
+          <p class="eyebrow">Acesso</p>
+          <h1>Entrar</h1>
         </div>
 
-        <main class="login-panel" aria-labelledby="login-title">
-          <div>
-            <p class="eyebrow">Acesso</p>
-            <h2 id="login-title">Entrar</h2>
-          </div>
+        <form class="stack" id="login-form">
+          <label for="login-user">Login</label>
+          <input id="login-user" autocomplete="username" required />
 
-          <form id="login-form" class="form-stack" novalidate>
-            <label for="login-user">Login</label>
-            <input id="login-user" name="user" type="text" autocomplete="username" required />
+          <label for="login-password">Senha</label>
+          <input id="login-password" type="password" autocomplete="current-password" required />
 
-            <label for="login-password">Senha</label>
-            <input id="login-password" name="password" type="password" autocomplete="current-password" required />
+          <p class="msg" id="login-message"></p>
+          <button class="primary" type="submit">Entrar</button>
+        </form>
+      </main>
+    </section>
 
-            <p class="form-message" id="login-message" role="alert"></p>
-            <button class="primary-button" type="submit">Entrar</button>
+    <section id="app-screen" hidden>
+      <header class="topbar">
+        <a class="mark" href="#">Leadprospec</a>
+        <div class="chip">
+          <span id="session-name"></span>
+          <small id="session-role"></small>
+        </div>
+        <button class="ghost" id="logout" type="button">Sair</button>
+      </header>
+
+      <main class="content">
+        <section class="card" id="user-view" hidden>
+          <p class="eyebrow">Novo lead</p>
+          <h2>Cadastro</h2>
+          <form class="lead-form" id="lead-form">
+            <label for="lead-name">Nome</label>
+            <input id="lead-name" required />
+
+            <label for="lead-cpf">CPF</label>
+            <input id="lead-cpf" inputmode="numeric" maxlength="14" required />
+
+            <label for="lead-phone">Telefone</label>
+            <input id="lead-phone" inputmode="tel" maxlength="15" required />
+
+            <p class="msg" id="lead-message"></p>
+            <button class="primary" id="save-lead" type="submit" disabled>Cadastrar lead</button>
           </form>
-        </main>
-      </section>
+        </section>
 
-      <section class="app-screen" id="app-screen" hidden>
-        <header class="topbar">
-          <a class="brand-mark" href="#" aria-label="Inicio">
-            <img src="./assets/logo.png" alt="Cartão de Todos" />
-          </a>
-
-          <div class="user-chip">
-            <span id="session-name"></span>
-            <small id="session-role"></small>
+        <section id="admin-view" hidden>
+          <div class="head">
+            <div>
+              <p class="eyebrow">Gerencial</p>
+              <h2>Painel Breno</h2>
+            </div>
+            <div class="tabs">
+              <button class="tab active" data-tab="leads" type="button">Leads</button>
+              <button class="tab" data-tab="draw" type="button">Sorteio</button>
+            </div>
           </div>
 
-          <button class="ghost-button" id="logout-button" type="button">Sair</button>
-        </header>
-
-        <main class="content">
-          <section class="user-view" id="user-view" hidden>
-            <div class="section-heading">
-              <p class="eyebrow">Novo lead</p>
-              <h2>Cadastro</h2>
+          <section class="panel-tab active" id="panel-leads">
+            <div class="stats">
+              <article class="metric"><span>Total</span><strong id="total-leads">0</strong></article>
+              <article class="metric"><span>Amanda</span><strong id="amanda-leads">0</strong></article>
+              <article class="metric"><span>Giovana</span><strong id="giovana-leads">0</strong></article>
             </div>
 
-            <form id="lead-form" class="lead-form" novalidate>
-              <label for="lead-name">Nome</label>
-              <input id="lead-name" name="name" type="text" autocomplete="name" required />
-
-              <label for="lead-cpf">CPF</label>
-              <input
-                id="lead-cpf"
-                name="cpf"
-                type="text"
-                inputmode="numeric"
-                autocomplete="off"
-                maxlength="14"
-                required
-              />
-
-              <label for="lead-phone">Telefone</label>
-              <input
-                id="lead-phone"
-                name="phone"
-                type="tel"
-                inputmode="tel"
-                autocomplete="tel"
-                maxlength="15"
-                required
-              />
-
-              <p class="form-message" id="lead-message" role="alert"></p>
-              <button class="primary-button" id="save-lead-button" type="submit" disabled>Cadastrar lead</button>
-            </form>
-          </section>
-
-          <section class="admin-view" id="admin-view" hidden>
-            <div class="admin-head">
-              <div class="section-heading">
-                <p class="eyebrow">Gerencial</p>
-                <h2>Painel Breno</h2>
-              </div>
-
-              <div class="tabs" role="tablist" aria-label="Painel gerencial">
-                <button class="tab-button active" id="tab-leads" type="button" data-tab="leads" role="tab" aria-selected="true">
-                  Leads
-                </button>
-                <button class="tab-button" id="tab-draw" type="button" data-tab="draw" role="tab" aria-selected="false">
-                  Sorteio
-                </button>
-              </div>
+            <div class="actions">
+              <label for="owner-filter">Responsável</label>
+              <select id="owner-filter">
+                <option value="all">Todos</option>
+                <option value="amanda">Amanda</option>
+                <option value="giovana">Giovana</option>
+              </select>
+              <button class="primary export" id="export" type="button">Exportar planilha</button>
             </div>
 
-            <section class="tab-panel active" id="panel-leads" role="tabpanel" aria-labelledby="tab-leads">
-              <div class="stats-grid" aria-label="Resumo de leads">
-                <article class="metric">
-                  <span>Total</span>
-                  <strong id="total-leads">0</strong>
-                </article>
-                <article class="metric">
-                  <span>Amanda</span>
-                  <strong id="amanda-leads">0</strong>
-                </article>
-                <article class="metric">
-                  <span>Giovana</span>
-                  <strong id="giovanna-leads">0</strong>
-                </article>
-              </div>
-
-              <div class="table-actions">
-                <label class="filter-label" for="owner-filter">Responsável</label>
-                <select id="owner-filter">
-                  <option value="all">Todos</option>
-                  <option value="amanda">Amanda</option>
-                  <option value="giovana">Giovana</option>
-                </select>
-                <button class="primary-button export-button" id="export-button" type="button">Exportar planilha</button>
-              </div>
-
-              <div class="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Nome</th>
-                      <th>CPF</th>
-                      <th>Telefone</th>
-                      <th>Responsável</th>
-                      <th>Data</th>
-                      <th>Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody id="leads-table"></tbody>
-                </table>
-                <p class="empty-state" id="empty-leads">Nenhum lead cadastrado.</p>
-              </div>
-            </section>
-
-            <section class="tab-panel" id="panel-draw" role="tabpanel" aria-labelledby="tab-draw" hidden>
-              <div class="draw-layout">
-                <div class="draw-zone">
-                  <p class="eyebrow">Sorteio</p>
-                  <p class="prize-title">Prêmio: bola oficial da Copa do Mundo</p>
-                  <div class="countdown" id="countdown">10</div>
-                  <p class="rolling-name" id="rolling-name">Aguardando participantes</p>
-                  <p class="winner-name" id="winner-name"></p>
-                  <button class="primary-button draw-button" id="draw-button" type="button">Sortear</button>
-                </div>
-              </div>
-
-              <div class="participants-strip" id="participants-strip" aria-label="Participantes do sorteio"></div>
-            </section>
+            <div class="table-wrap" id="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>CPF</th>
+                    <th>Telefone</th>
+                    <th>Responsável</th>
+                    <th>Data</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="leads-table"></tbody>
+              </table>
+              <p class="empty">Nenhum lead cadastrado.</p>
+            </div>
           </section>
-        </main>
-      </section>
-    </div>
 
-    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+          <section class="panel-tab" id="panel-draw" hidden>
+            <div class="draw">
+              <div class="drawbox">
+                <p class="eyebrow">Sorteio</p>
+                <h2>Bola oficial da Copa do Mundo</h2>
+                <div class="count" id="countdown">10</div>
+                <p class="rolling" id="rolling-name">Aguardando participantes</p>
+                <p class="winner" id="winner-name"></p>
+                <button class="primary" id="draw-button" type="button">Sortear</button>
+              </div>
+            </div>
+            <div class="participants" id="participants"></div>
+          </section>
+        </section>
+      </main>
+    </section>
+
+    <div class="toast" id="toast"></div>
   </body>
 </html>
