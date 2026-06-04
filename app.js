@@ -1,4 +1,4 @@
-const API_BASE = "https://rhzayzebnmiuweffobzn.supabase.co/functions/v1/cartao-leads";
+const API_BASE = "https://bpxbxiesmarofnjztcpu.supabase.co/functions/v1/cartao-leads";
 const SESSION_KEY = "leadprospecSession";
 const SYNC_INTERVAL_MS = 1000;
 
