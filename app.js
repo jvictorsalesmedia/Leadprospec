@@ -102,6 +102,12 @@ function formatPhone(value) {
     .replace(/(\d{5})(\d)/, "$1-$2");
 }
 
+function whatsappUrl(phone) {
+  const digits = onlyDigits(phone);
+  const number = digits.startsWith("55") && digits.length > 11 ? digits : `55${digits}`;
+  return `https://wa.me/${number}`;
+}
+
 function formatDate(isoDate) {
   return new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "short",
@@ -248,12 +254,32 @@ function renderTable() {
     row.innerHTML = `
       <td>${escapeHtml(lead.name)}</td>
       <td>${escapeHtml(lead.cpf)}</td>
-      <td>${escapeHtml(lead.phone)}</td>
+      <td><a class="whatsapp-link" href="${whatsappUrl(lead.phone)}" target="_blank" rel="noopener">${escapeHtml(lead.phone)}</a></td>
       <td>${escapeHtml(lead.ownerName)}</td>
       <td>${escapeHtml(formatDate(lead.createdAt))}</td>
+      <td><button class="danger-button" type="button" data-delete-lead="${escapeHtml(lead.id)}">Excluir</button></td>
     `;
     leadsTable.appendChild(row);
   });
+}
+
+function deleteLead(leadId) {
+  const lead = state.leads.find((item) => item.id === leadId);
+
+  if (!lead) {
+    return;
+  }
+
+  const shouldDelete = window.confirm(`Excluir o cadastro de ${lead.name}?`);
+
+  if (!shouldDelete) {
+    return;
+  }
+
+  state.leads = state.leads.filter((item) => item.id !== leadId);
+  saveLeads();
+  renderAdmin();
+  showToast("Cadastro excluído.");
 }
 
 function renderParticipants() {
@@ -449,6 +475,16 @@ leadForm.addEventListener("submit", (event) => {
 ownerFilter.addEventListener("change", renderTable);
 exportButton.addEventListener("click", exportCsv);
 drawButton.addEventListener("click", runDraw);
+
+leadsTable.addEventListener("click", (event) => {
+  const deleteButton = event.target.closest("[data-delete-lead]");
+
+  if (!deleteButton) {
+    return;
+  }
+
+  deleteLead(deleteButton.dataset.deleteLead);
+});
 
 tabButtons.forEach((button) => {
   button.addEventListener("click", () => switchTab(button.dataset.tab));

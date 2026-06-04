@@ -194,6 +194,21 @@ select:focus {
   color: var(--green-900);
 }
 
+.danger-button {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(159, 46, 40, 0.2);
+  border-radius: 8px;
+  background: #fff1ef;
+  color: #9f2e28;
+  font-size: 0.88rem;
+  font-weight: 900;
+}
+
+.danger-button:hover {
+  background: #ffe2de;
+}
+
 .app-screen {
   min-height: 100vh;
 }
@@ -359,7 +374,7 @@ select:focus {
 
 table {
   width: 100%;
-  min-width: 780px;
+  min-width: 900px;
   border-collapse: collapse;
 }
 
@@ -381,6 +396,16 @@ th {
 td {
   color: var(--ink);
   font-weight: 650;
+}
+
+.whatsapp-link {
+  color: var(--green-700);
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.whatsapp-link:hover {
+  text-decoration: underline;
 }
 
 tr:last-child td {
