@@ -8,29 +8,80 @@
     <script src="./app.js" defer></script>
   </head>
   <body>
-    <section class="login" id="login-screen">
+    <section class="login is-register-active" id="login-screen">
       <div class="hero">
-        <img src="./assets/logo.png" alt="Cartão de Todos" class="logo" />
+        <div class="draw-cover" role="img" aria-label="Sorteio da bola oficial da Copa do Mundo 2026"></div>
+        <img src="./assets/logo.jpg" alt="Cartão de Todos" class="logo" />
+        <p class="blink-cta">Sorteio da bola oficial da Copa do Mundo 2026</p>
         <p class="subtitle">Cartão de Todos</p>
         <div class="brand">Leadprospec</div>
       </div>
 
-      <main class="panel">
-        <div>
-          <p class="eyebrow">Acesso</p>
-          <h1>Entrar</h1>
+      <main class="panel access-panel">
+        <div class="home-tabs" role="tablist" aria-label="Acesso Leadprospec">
+          <button class="home-tab active" data-home-tab="draw-register-panel" type="button">Cadastro do sorteio</button>
+          <button class="home-tab" data-home-tab="login-panel" type="button">Login</button>
         </div>
 
-        <form class="stack" id="login-form">
-          <label for="login-user">Login</label>
-          <input id="login-user" autocomplete="username" required />
+        <section class="home-panel" id="login-panel" hidden>
+          <div>
+            <p class="eyebrow">Acesso</p>
+            <h1>Entrar</h1>
+          </div>
 
-          <label for="login-password">Senha</label>
-          <input id="login-password" type="password" autocomplete="current-password" required />
+          <form class="stack" id="login-form">
+            <label for="login-user">Login</label>
+            <input id="login-user" autocomplete="username" required />
 
-          <p class="msg" id="login-message"></p>
-          <button class="primary" type="submit">Entrar</button>
-        </form>
+            <label for="login-password">Senha</label>
+            <input id="login-password" type="password" autocomplete="current-password" required />
+
+            <p class="msg" id="login-message"></p>
+            <button class="primary" type="submit">Entrar</button>
+          </form>
+        </section>
+
+        <section class="home-panel active" id="draw-register-panel">
+          <div>
+            <p class="eyebrow">Cadastro do sorteio</p>
+            <h1>Participe</h1>
+          </div>
+
+          <form class="stack" id="site-lead-form">
+            <label for="site-name">Nome completo</label>
+            <input id="site-name" autocomplete="name" required />
+
+            <label for="site-cpf">CPF</label>
+            <input id="site-cpf" inputmode="numeric" maxlength="14" required />
+
+            <label for="site-phone">WhatsApp</label>
+            <input id="site-phone" inputmode="tel" maxlength="15" autocomplete="tel" required />
+
+            <a class="insta-link" id="instagram-link" href="https://www.instagram.com/cdtcamposdosgoytacazes/" target="_blank" rel="noopener">
+              <span class="click-pulse" aria-hidden="true"></span>
+              <span>Clique para seguir Instagram do Cartão de Todos</span>
+              <strong aria-hidden="true">CLIQUE</strong>
+            </a>
+
+            <div class="rules-callout" aria-label="Regras do sorteio">
+              <span>REGRAS</span>
+              <span class="down-arrow" aria-hidden="true"></span>
+            </div>
+
+            <label class="checkline" for="site-instagram">
+              <input id="site-instagram" type="checkbox" disabled required />
+              <span>Confirmo que segui o Instagram do Cartão de Todos.</span>
+            </label>
+
+            <label class="checkline" for="site-whatsapp-match">
+              <input id="site-whatsapp-match" type="checkbox" required />
+              <span>Confirmo que este WhatsApp pertence ao nome cadastrado.</span>
+            </label>
+
+            <p class="msg" id="site-message"></p>
+            <button class="primary pulse-register" id="site-save" type="submit" disabled>Cadastrar no sorteio</button>
+          </form>
+        </section>
       </main>
     </section>
 
@@ -80,6 +131,7 @@
               <article class="metric"><span>Total</span><strong id="total-leads">0</strong></article>
               <article class="metric"><span>Amanda</span><strong id="amanda-leads">0</strong></article>
               <article class="metric"><span>Giovana</span><strong id="giovana-leads">0</strong></article>
+              <article class="metric"><span>Site</span><strong id="site-leads">0</strong></article>
             </div>
 
             <div class="actions">
@@ -88,6 +140,7 @@
                 <option value="all">Todos</option>
                 <option value="amanda">Amanda</option>
                 <option value="giovana">Giovana</option>
+                <option value="site">Site</option>
               </select>
               <button class="primary export" id="export" type="button">Exportar planilha</button>
             </div>

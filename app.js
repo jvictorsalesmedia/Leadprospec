@@ -8,6 +8,7 @@ const state = {
   drawing: false,
   syncing: false,
   syncTimer: null,
+  instagramVisited: false,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -17,11 +18,20 @@ const appScreen = $("app-screen");
 const userView = $("user-view");
 const adminView = $("admin-view");
 const loginForm = $("login-form");
+const siteLeadForm = $("site-lead-form");
 const leadForm = $("lead-form");
 const toast = $("toast");
 const loginUser = $("login-user");
 const loginPassword = $("login-password");
 const loginMessage = $("login-message");
+const siteName = $("site-name");
+const siteCpf = $("site-cpf");
+const sitePhone = $("site-phone");
+const siteInstagram = $("site-instagram");
+const siteWhatsappMatch = $("site-whatsapp-match");
+const siteMessage = $("site-message");
+const siteSave = $("site-save");
+const instagramLink = $("instagram-link");
 const leadName = $("lead-name");
 const leadCpf = $("lead-cpf");
 const leadPhone = $("lead-phone");
@@ -172,6 +182,23 @@ function validateLead() {
   return ready;
 }
 
+function hasFullName(value) {
+  return value.trim().split(/\s+/).filter(Boolean).length >= 2;
+}
+
+function validateSiteLead() {
+  const ready =
+    hasFullName(siteName.value) &&
+    digits(siteCpf.value).length === 11 &&
+    digits(sitePhone.value).length >= 10 &&
+    state.instagramVisited &&
+    siteInstagram.checked &&
+    siteWhatsappMatch.checked;
+
+  siteSave.disabled = !ready;
+  return ready;
+}
+
 function startCloudSync() {
   stopCloudSync();
 
@@ -222,6 +249,7 @@ function renderAdmin() {
   $("total-leads").textContent = state.leads.length;
   $("amanda-leads").textContent = state.leads.filter((lead) => lead.owner === "amanda").length;
   $("giovana-leads").textContent = state.leads.filter((lead) => lead.owner === "giovana").length;
+  $("site-leads").textContent = state.leads.filter((lead) => lead.owner === "site").length;
   renderTable();
   renderParticipants();
 }
@@ -364,6 +392,21 @@ loginForm.addEventListener("submit", async (event) => {
   }
 });
 
+document.querySelectorAll(".home-tab").forEach((button) => {
+  button.addEventListener("click", () => {
+    const isRegister = button.dataset.homeTab === "draw-register-panel";
+
+    loginScreen.classList.toggle("is-register-active", isRegister);
+    loginScreen.classList.toggle("is-login-active", !isRegister);
+    document.querySelectorAll(".home-tab").forEach((tab) => tab.classList.toggle("active", tab === button));
+    document.querySelectorAll(".home-panel").forEach((panel) => {
+      const active = panel.id === button.dataset.homeTab;
+      panel.hidden = !active;
+      panel.classList.toggle("active", active);
+    });
+  });
+});
+
 $("logout").addEventListener("click", clearSession);
 leadForm.addEventListener("input", validateLead);
 leadCpf.addEventListener("input", () => {
@@ -373,6 +416,26 @@ leadCpf.addEventListener("input", () => {
 leadPhone.addEventListener("input", () => {
   leadPhone.value = phone(leadPhone.value);
   validateLead();
+});
+
+siteLeadForm.addEventListener("input", validateSiteLead);
+siteCpf.addEventListener("input", () => {
+  siteCpf.value = cpf(siteCpf.value);
+  validateSiteLead();
+});
+sitePhone.addEventListener("input", () => {
+  sitePhone.value = phone(sitePhone.value);
+  validateSiteLead();
+});
+siteInstagram.addEventListener("change", validateSiteLead);
+siteWhatsappMatch.addEventListener("change", validateSiteLead);
+instagramLink.addEventListener("click", () => {
+  state.instagramVisited = true;
+  siteInstagram.disabled = false;
+  siteInstagram.checked = true;
+  instagramLink.classList.add("visited");
+  siteMessage.textContent = "";
+  validateSiteLead();
 });
 
 leadForm.addEventListener("submit", async (event) => {
@@ -397,6 +460,40 @@ leadForm.addEventListener("submit", async (event) => {
     leadMessage.textContent = error.message;
   } finally {
     validateLead();
+  }
+});
+
+siteLeadForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  if (!validateSiteLead()) {
+    siteMessage.textContent = "Preencha nome completo, CPF, WhatsApp e confirme as regras.";
+    return;
+  }
+
+  siteMessage.textContent = "";
+  siteSave.disabled = true;
+
+  try {
+    await api("/api/site-leads", {
+      method: "POST",
+      body: JSON.stringify({
+        name: siteName.value,
+        cpf: siteCpf.value,
+        phone: sitePhone.value,
+        followedInstagram: siteInstagram.checked,
+        whatsappMatchesName: siteWhatsappMatch.checked,
+      }),
+    });
+    siteLeadForm.reset();
+    state.instagramVisited = false;
+    siteInstagram.disabled = true;
+    instagramLink.classList.remove("visited");
+    showToast("Cadastro do sorteio recebido.");
+  } catch (error) {
+    siteMessage.textContent = error.message;
+  } finally {
+    validateSiteLead();
   }
 });
 
