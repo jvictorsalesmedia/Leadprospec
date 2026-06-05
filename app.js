@@ -38,7 +38,7 @@ const leadCpf = $("lead-cpf");
 const leadPhone = $("lead-phone");
 const leadMessage = $("lead-message");
 const saveLead = $("save-lead");
-const stats = $("stats");
+const stats = $("stats") || document.querySelector(".stats");
 const leadsTable = $("leads-table");
 const tableWrap = $("table-wrap");
 const ownerFilter = $("owner-filter");
@@ -224,6 +224,10 @@ function validateSiteLead() {
 }
 
 function validateUserForm() {
+  if (!newUserName || !newUserLogin || !newUserPassword || !createUser) {
+    return false;
+  }
+
   const ready =
     newUserName.value.trim().length > 1 &&
     loginSlug(newUserLogin.value).length >= 3 &&
@@ -309,6 +313,10 @@ function activeResponsibleUsers() {
 }
 
 function renderStats() {
+  if (!stats) {
+    return;
+  }
+
   const metrics = [
     { label: "Total", value: state.leads.length },
     ...activeResponsibleUsers().map((user) => ({
@@ -344,6 +352,10 @@ function renderOwnerFilter() {
 }
 
 function renderUsers() {
+  if (!usersWrap || !usersTable) {
+    return;
+  }
+
   usersWrap.classList.toggle("is-empty", state.users.length === 0);
   usersTable.innerHTML = state.users
     .map((user) => `
@@ -357,6 +369,7 @@ function renderUsers() {
             <button class="primary compact" data-password-login="${escapeHtml(user.login)}" type="button">Alterar</button>
           </div>
         </td>
+        <td><button class="danger" data-remove-login="${escapeHtml(user.login)}" type="button">Remover</button></td>
       </tr>
     `)
     .join("");
@@ -526,11 +539,16 @@ leadPhone.addEventListener("input", () => {
   validateLead();
 });
 
-userForm.addEventListener("input", validateUserForm);
-newUserLogin.addEventListener("input", () => {
-  newUserLogin.value = loginSlug(newUserLogin.value);
-  validateUserForm();
-});
+if (userForm) {
+  userForm.addEventListener("input", validateUserForm);
+}
+
+if (newUserLogin) {
+  newUserLogin.addEventListener("input", () => {
+    newUserLogin.value = loginSlug(newUserLogin.value);
+    validateUserForm();
+  });
+}
 
 siteLeadForm.addEventListener("input", validateSiteLead);
 siteCpf.addEventListener("input", () => {
@@ -577,7 +595,8 @@ leadForm.addEventListener("submit", async (event) => {
   }
 });
 
-userForm.addEventListener("submit", async (event) => {
+if (userForm) {
+  userForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   if (!validateUserForm()) {
@@ -606,7 +625,8 @@ userForm.addEventListener("submit", async (event) => {
   } finally {
     validateUserForm();
   }
-});
+  });
+}
 
 siteLeadForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -700,7 +720,34 @@ leadsTable.addEventListener("click", async (event) => {
   }
 });
 
-usersTable.addEventListener("click", async (event) => {
+if (usersTable) {
+  usersTable.addEventListener("click", async (event) => {
+  const removeButton = event.target.closest("[data-remove-login]");
+
+  if (removeButton) {
+    const login = removeButton.dataset.removeLogin;
+    const user = state.users.find((item) => item.login === login);
+
+    if (!user || !confirm(`Remover o acesso de ${user.name}?`)) {
+      return;
+    }
+
+    removeButton.disabled = true;
+
+    try {
+      await api(`/api/users/${encodeURIComponent(login)}`, { method: "DELETE" });
+      await loadUsers({ silent: true });
+      renderAdmin();
+      showToast("Usuário removido.");
+    } catch (error) {
+      showToast(error.message);
+    } finally {
+      removeButton.disabled = false;
+    }
+
+    return;
+  }
+
   const button = event.target.closest("[data-password-login]");
 
   if (!button) {
@@ -732,7 +779,8 @@ usersTable.addEventListener("click", async (event) => {
   } finally {
     button.disabled = false;
   }
-});
+  });
+}
 
 loadSession();
 renderSession();
