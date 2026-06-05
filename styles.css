@@ -371,8 +371,8 @@ select:focus {
 
 .tabs {
   display: inline-grid;
-  grid-template-columns: 1fr 1fr;
-  min-width: 260px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  min-width: 360px;
   padding: 4px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -489,7 +489,7 @@ select:focus {
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 14px;
   margin-bottom: 18px;
 }
@@ -582,6 +582,51 @@ td {
 
 .table-wrap.is-empty .empty {
   display: block;
+}
+
+.admin-tools {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.85fr) minmax(480px, 1.45fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.user-manager {
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 18px 44px rgba(6, 45, 33, 0.08);
+}
+
+.user-manager h2 {
+  margin-bottom: 18px;
+}
+
+.user-form {
+  display: grid;
+  gap: 10px;
+}
+
+.users-table {
+  min-width: 760px;
+}
+
+.inline-action {
+  display: grid;
+  grid-template-columns: minmax(170px, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.inline-password {
+  min-height: 38px;
+}
+
+.compact {
+  min-height: 38px;
+  padding: 0 12px;
+  white-space: nowrap;
 }
 
 .draw {
@@ -787,7 +832,8 @@ td {
 @media (max-width: 860px) {
   .login,
   .stats,
-  .actions {
+  .actions,
+  .admin-tools {
     grid-template-columns: 1fr;
   }
 

@@ -5,6 +5,7 @@ const SYNC_INTERVAL_MS = 1000;
 const state = {
   session: null,
   leads: [],
+  users: [],
   drawing: false,
   syncing: false,
   syncTimer: null,
@@ -37,9 +38,18 @@ const leadCpf = $("lead-cpf");
 const leadPhone = $("lead-phone");
 const leadMessage = $("lead-message");
 const saveLead = $("save-lead");
+const stats = $("stats");
 const leadsTable = $("leads-table");
 const tableWrap = $("table-wrap");
 const ownerFilter = $("owner-filter");
+const userForm = $("user-form");
+const newUserName = $("new-user-name");
+const newUserLogin = $("new-user-login");
+const newUserPassword = $("new-user-password");
+const userMessage = $("user-message");
+const createUser = $("create-user");
+const usersTable = $("users-table");
+const usersWrap = $("users-wrap");
 const participants = $("participants");
 const countdown = $("countdown");
 const rollingName = $("rolling-name");
@@ -133,6 +143,7 @@ function clearSession() {
   stopCloudSync();
   state.session = null;
   state.leads = [];
+  state.users = [];
   sessionStorage.removeItem(SESSION_KEY);
   renderSession();
 }
@@ -164,6 +175,7 @@ function renderSession() {
 
   if (session.user.role === "admin") {
     loadLeads();
+    loadUsers();
     startCloudSync();
   } else {
     stopCloudSync();
@@ -186,6 +198,18 @@ function hasFullName(value) {
   return value.trim().split(/\s+/).filter(Boolean).length >= 2;
 }
 
+function loginSlug(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9._-]+/g, ".")
+    .replace(/\.+/g, ".")
+    .replace(/^[._-]+|[._-]+$/g, "")
+    .slice(0, 40);
+}
+
 function validateSiteLead() {
   const ready =
     hasFullName(siteName.value) &&
@@ -196,6 +220,16 @@ function validateSiteLead() {
     siteWhatsappMatch.checked;
 
   siteSave.disabled = !ready;
+  return ready;
+}
+
+function validateUserForm() {
+  const ready =
+    newUserName.value.trim().length > 1 &&
+    loginSlug(newUserLogin.value).length >= 3 &&
+    newUserPassword.value.length >= 6;
+
+  createUser.disabled = !ready;
   return ready;
 }
 
@@ -245,13 +279,87 @@ async function loadLeads({ silent = false } = {}) {
   }
 }
 
+async function loadUsers({ silent = false } = {}) {
+  try {
+    const data = await api("/api/users");
+    state.users = data.users || [];
+    renderOwnerFilter();
+    renderUsers();
+    renderStats();
+  } catch (error) {
+    if (!silent) {
+      showToast(error.message);
+    }
+
+    if (String(error.message).toLowerCase().includes("sess")) {
+      clearSession();
+    }
+  }
+}
+
 function renderAdmin() {
-  $("total-leads").textContent = state.leads.length;
-  $("amanda-leads").textContent = state.leads.filter((lead) => lead.owner === "amanda").length;
-  $("giovana-leads").textContent = state.leads.filter((lead) => lead.owner === "giovana").length;
-  $("site-leads").textContent = state.leads.filter((lead) => lead.owner === "site").length;
+  renderStats();
+  renderOwnerFilter();
   renderTable();
   renderParticipants();
+}
+
+function activeResponsibleUsers() {
+  return state.users.filter((user) => user.role === "user" && user.active !== false);
+}
+
+function renderStats() {
+  const metrics = [
+    { label: "Total", value: state.leads.length },
+    ...activeResponsibleUsers().map((user) => ({
+      label: user.name,
+      value: state.leads.filter((lead) => lead.owner === user.login).length,
+    })),
+    { label: "Site", value: state.leads.filter((lead) => lead.owner === "site").length },
+  ];
+
+  stats.innerHTML = metrics
+    .map((metric) => `
+      <article class="metric">
+        <span>${escapeHtml(metric.label)}</span>
+        <strong>${metric.value}</strong>
+      </article>
+    `)
+    .join("");
+}
+
+function renderOwnerFilter() {
+  const selected = ownerFilter.value || "all";
+  const options = [
+    { value: "all", label: "Todos" },
+    ...activeResponsibleUsers().map((user) => ({ value: user.login, label: user.name })),
+    { value: "site", label: "Site" },
+  ];
+  const values = new Set(options.map((option) => option.value));
+
+  ownerFilter.innerHTML = options
+    .map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`)
+    .join("");
+  ownerFilter.value = values.has(selected) ? selected : "all";
+}
+
+function renderUsers() {
+  usersWrap.classList.toggle("is-empty", state.users.length === 0);
+  usersTable.innerHTML = state.users
+    .map((user) => `
+      <tr>
+        <td>${escapeHtml(user.name)}</td>
+        <td>${escapeHtml(user.login)}</td>
+        <td>${escapeHtml(user.roleLabel)}</td>
+        <td>
+          <div class="inline-action">
+            <input class="inline-password" type="password" placeholder="Nova senha" data-password-input="${escapeHtml(user.login)}" autocomplete="new-password" />
+            <button class="primary compact" data-password-login="${escapeHtml(user.login)}" type="button">Alterar</button>
+          </div>
+        </td>
+      </tr>
+    `)
+    .join("");
 }
 
 function visibleLeads() {
@@ -418,6 +526,12 @@ leadPhone.addEventListener("input", () => {
   validateLead();
 });
 
+userForm.addEventListener("input", validateUserForm);
+newUserLogin.addEventListener("input", () => {
+  newUserLogin.value = loginSlug(newUserLogin.value);
+  validateUserForm();
+});
+
 siteLeadForm.addEventListener("input", validateSiteLead);
 siteCpf.addEventListener("input", () => {
   siteCpf.value = cpf(siteCpf.value);
@@ -460,6 +574,37 @@ leadForm.addEventListener("submit", async (event) => {
     leadMessage.textContent = error.message;
   } finally {
     validateLead();
+  }
+});
+
+userForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  if (!validateUserForm()) {
+    userMessage.textContent = "Preencha nome, login e uma senha com pelo menos 6 caracteres.";
+    return;
+  }
+
+  userMessage.textContent = "";
+  createUser.disabled = true;
+
+  try {
+    await api("/api/users", {
+      method: "POST",
+      body: JSON.stringify({
+        name: newUserName.value,
+        login: loginSlug(newUserLogin.value),
+        password: newUserPassword.value,
+      }),
+    });
+    userForm.reset();
+    await loadUsers({ silent: true });
+    renderAdmin();
+    showToast("Responsável criada.");
+  } catch (error) {
+    userMessage.textContent = error.message;
+  } finally {
+    validateUserForm();
   }
 });
 
@@ -525,6 +670,10 @@ document.querySelectorAll(".tab").forEach((button) => {
     if (button.dataset.tab === "draw") {
       renderParticipants();
     }
+
+    if (button.dataset.tab === "users") {
+      loadUsers({ silent: true });
+    }
   });
 });
 
@@ -548,6 +697,40 @@ leadsTable.addEventListener("click", async (event) => {
     showToast("Cadastro excluído.");
   } catch (error) {
     showToast(error.message);
+  }
+});
+
+usersTable.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-password-login]");
+
+  if (!button) {
+    return;
+  }
+
+  const login = button.dataset.passwordLogin;
+  const input = [...usersTable.querySelectorAll("[data-password-input]")]
+    .find((item) => item.dataset.passwordInput === login);
+  const password = input?.value || "";
+
+  if (password.length < 6) {
+    showToast("Digite uma senha com pelo menos 6 caracteres.");
+    input?.focus();
+    return;
+  }
+
+  button.disabled = true;
+
+  try {
+    await api(`/api/users/${encodeURIComponent(login)}/password`, {
+      method: "POST",
+      body: JSON.stringify({ password }),
+    });
+    input.value = "";
+    showToast("Senha alterada.");
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    button.disabled = false;
   }
 });
 

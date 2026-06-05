@@ -122,25 +122,18 @@
             </div>
             <div class="tabs">
               <button class="tab active" data-tab="leads" type="button">Leads</button>
+              <button class="tab" data-tab="users" type="button">Usuários</button>
               <button class="tab" data-tab="draw" type="button">Sorteio</button>
             </div>
           </div>
 
           <section class="panel-tab active" id="panel-leads">
-            <div class="stats">
-              <article class="metric"><span>Total</span><strong id="total-leads">0</strong></article>
-              <article class="metric"><span>Amanda</span><strong id="amanda-leads">0</strong></article>
-              <article class="metric"><span>Giovana</span><strong id="giovana-leads">0</strong></article>
-              <article class="metric"><span>Site</span><strong id="site-leads">0</strong></article>
-            </div>
+            <div class="stats" id="stats"></div>
 
             <div class="actions">
               <label for="owner-filter">Responsável</label>
               <select id="owner-filter">
                 <option value="all">Todos</option>
-                <option value="amanda">Amanda</option>
-                <option value="giovana">Giovana</option>
-                <option value="site">Site</option>
               </select>
               <button class="primary export" id="export" type="button">Exportar planilha</button>
             </div>
@@ -160,6 +153,47 @@
                 <tbody id="leads-table"></tbody>
               </table>
               <p class="empty">Nenhum lead cadastrado.</p>
+            </div>
+          </section>
+
+          <section class="panel-tab" id="panel-users" hidden>
+            <div class="admin-tools">
+              <section class="user-manager">
+                <p class="eyebrow">Responsáveis</p>
+                <h2>Criar usuário</h2>
+                <form class="user-form" id="user-form">
+                  <label for="new-user-name">Nome da responsável</label>
+                  <input id="new-user-name" autocomplete="off" required />
+
+                  <label for="new-user-login">Login</label>
+                  <input id="new-user-login" autocomplete="off" required />
+
+                  <label for="new-user-password">Senha inicial</label>
+                  <input id="new-user-password" type="password" autocomplete="new-password" required />
+
+                  <p class="msg" id="user-message"></p>
+                  <button class="primary" id="create-user" type="submit" disabled>Criar responsável</button>
+                </form>
+              </section>
+
+              <section class="user-manager">
+                <p class="eyebrow">Senhas</p>
+                <h2>Usuários criados</h2>
+                <div class="table-wrap users-wrap" id="users-wrap">
+                  <table class="users-table">
+                    <thead>
+                      <tr>
+                        <th>Nome</th>
+                        <th>Login</th>
+                        <th>Perfil</th>
+                        <th>Nova senha</th>
+                      </tr>
+                    </thead>
+                    <tbody id="users-table"></tbody>
+                  </table>
+                  <p class="empty">Nenhum usuário cadastrado.</p>
+                </div>
+              </section>
             </div>
           </section>
 
