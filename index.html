@@ -3,218 +3,273 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Leadprospec</title>
-    <link rel="stylesheet" href="./styles.css" />
-    <script src="./app.js" defer></script>
+    <title>Central de Conteudo</title>
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <section class="login is-register-active" id="login-screen">
-      <div class="hero">
-        <div class="draw-cover" role="img" aria-label="Sorteio da bola oficial da Copa do Mundo 2026"></div>
-        <img src="./assets/logo.jpg" alt="Cartão de Todos" class="logo" />
-        <p class="blink-cta">Sorteio da bola oficial da Copa do Mundo 2026</p>
-        <p class="subtitle">Cartão de Todos</p>
-        <div class="brand">Leadprospec</div>
+    <section class="auth-screen" id="authView">
+      <div class="auth-panel">
+        <img src="assets/content-board.svg" alt="" class="brand-mark" />
+        <p class="eyebrow">Portal de Conteudo</p>
+        <h1>Acesse sua central</h1>
+        <form class="auth-form" id="loginForm">
+          <label>
+            Email
+            <input id="loginEmail" type="email" autocomplete="email" required />
+          </label>
+          <label>
+            Senha
+            <input id="loginPassword" type="password" autocomplete="current-password" required />
+          </label>
+          <button class="primary-action" type="submit">Entrar</button>
+        </form>
+        <p class="auth-message" data-auth-message>Use o acesso criado pelo administrador.</p>
       </div>
-
-      <main class="panel access-panel">
-        <div class="home-tabs" role="tablist" aria-label="Acesso Leadprospec">
-          <button class="home-tab active" data-home-tab="draw-register-panel" type="button">Cadastro do sorteio</button>
-          <button class="home-tab" data-home-tab="login-panel" type="button">Login</button>
-        </div>
-
-        <section class="home-panel" id="login-panel" hidden>
-          <div>
-            <p class="eyebrow">Acesso</p>
-            <h1>Entrar</h1>
-          </div>
-
-          <form class="stack" id="login-form">
-            <label for="login-user">Login</label>
-            <input id="login-user" autocomplete="username" required />
-
-            <label for="login-password">Senha</label>
-            <input id="login-password" type="password" autocomplete="current-password" required />
-
-            <p class="msg" id="login-message"></p>
-            <button class="primary" type="submit">Entrar</button>
-          </form>
-        </section>
-
-        <section class="home-panel active" id="draw-register-panel">
-          <div>
-            <p class="eyebrow">Cadastro do sorteio</p>
-            <h1>Participe</h1>
-          </div>
-
-          <form class="stack" id="site-lead-form">
-            <label for="site-name">Nome completo</label>
-            <input id="site-name" autocomplete="name" required />
-
-            <label for="site-cpf">CPF</label>
-            <input id="site-cpf" inputmode="numeric" maxlength="14" required />
-
-            <label for="site-phone">WhatsApp</label>
-            <input id="site-phone" inputmode="tel" maxlength="15" autocomplete="tel" required />
-
-            <a class="insta-link" id="instagram-link" href="https://www.instagram.com/cdtcamposdosgoytacazes/" target="_blank" rel="noopener">
-              <span class="click-pulse" aria-hidden="true"></span>
-              <span>Clique para seguir Instagram do Cartão de Todos</span>
-              <strong aria-hidden="true">CLIQUE</strong>
-            </a>
-
-            <div class="rules-callout" aria-label="Regras do sorteio">
-              <span>REGRAS</span>
-              <span class="down-arrow" aria-hidden="true"></span>
-            </div>
-
-            <label class="checkline" for="site-instagram">
-              <input id="site-instagram" type="checkbox" disabled required />
-              <span>Confirmo que segui o Instagram do Cartão de Todos.</span>
-            </label>
-
-            <label class="checkline" for="site-whatsapp-match">
-              <input id="site-whatsapp-match" type="checkbox" required />
-              <span>Confirmo que este WhatsApp pertence ao nome cadastrado.</span>
-            </label>
-
-            <p class="msg" id="site-message"></p>
-            <button class="primary pulse-register" id="site-save" type="submit" disabled>Cadastrar no sorteio</button>
-          </form>
-        </section>
-      </main>
     </section>
 
-    <section id="app-screen" hidden>
-      <header class="topbar">
-        <a class="mark" href="#">Leadprospec</a>
-        <div class="chip">
-          <span id="session-name"></span>
-          <small id="session-role"></small>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Navegacao principal">
+        <div class="brand">
+          <img src="assets/content-board.svg" alt="" class="brand-mark" />
+          <div>
+            <strong>Central de Conteudo</strong>
+            <span>Operacao de postagens</span>
+          </div>
         </div>
-        <button class="ghost" id="logout" type="button">Sair</button>
-      </header>
 
-      <main class="content">
-        <section class="card" id="user-view" hidden>
-          <p class="eyebrow">Novo lead</p>
-          <h2>Cadastro</h2>
-          <form class="lead-form" id="lead-form">
-            <label for="lead-name">Nome</label>
-            <input id="lead-name" required />
+        <nav class="nav-list" aria-label="Secoes">
+          <button class="nav-item is-active" data-view="dashboard" type="button">
+            <span class="nav-icon" aria-hidden="true">P</span>
+            Painel
+          </button>
+          <button class="nav-item" data-view="clients" type="button">
+            <span class="nav-icon" aria-hidden="true">C</span>
+            Clientes
+            <span class="nav-count" data-count="clients">0</span>
+          </button>
+          <button class="nav-item" data-view="posts" type="button">
+            <span class="nav-icon" aria-hidden="true">O</span>
+            Posts
+            <span class="nav-count" data-count="posts">0</span>
+          </button>
+          <button class="nav-item" data-view="agenda" type="button">
+            <span class="nav-icon" aria-hidden="true">A</span>
+            Agenda
+            <span class="nav-count" data-count="agenda">0</span>
+          </button>
+          <button class="nav-item" data-view="scripts" type="button">
+            <span class="nav-icon" aria-hidden="true">R</span>
+            Roteiros
+            <span class="nav-count" data-count="scripts">0</span>
+          </button>
+          <button class="nav-item" data-view="recordings" type="button">
+            <span class="nav-icon" aria-hidden="true">G</span>
+            Gravacoes
+            <span class="nav-count" data-count="recordings">0</span>
+          </button>
+        </nav>
 
-            <label for="lead-cpf">CPF</label>
-            <input id="lead-cpf" inputmode="numeric" maxlength="14" required />
+        <div class="sidebar-card">
+          <span class="caption">Proximo foco</span>
+          <strong data-next-focus>Carregando...</strong>
+          <p>Use o painel para ver gargalos e decidir a proxima acao do dia.</p>
+        </div>
+      </aside>
 
-            <label for="lead-phone">Telefone</label>
-            <input id="lead-phone" inputmode="tel" maxlength="15" required />
-
-            <p class="msg" id="lead-message"></p>
-            <button class="primary" id="save-lead" type="submit" disabled>Cadastrar lead</button>
-          </form>
-        </section>
-
-        <section id="admin-view" hidden>
-          <div class="head">
-            <div>
-              <p class="eyebrow">Gerencial</p>
-              <h2>Painel Breno</h2>
-            </div>
-            <div class="tabs">
-              <button class="tab active" data-tab="leads" type="button">Leads</button>
-              <button class="tab" data-tab="users" type="button">Usuários</button>
-              <button class="tab" data-tab="draw" type="button">Sorteio</button>
-            </div>
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Planejamento e producao</p>
+            <h1 data-view-title>Painel</h1>
           </div>
 
-          <section class="panel-tab active" id="panel-leads">
-            <div class="stats" id="stats"></div>
-
-            <div class="actions">
-              <label for="owner-filter">Responsável</label>
-              <select id="owner-filter">
-                <option value="all">Todos</option>
-              </select>
-              <button class="primary export" id="export" type="button">Exportar planilha</button>
+          <div class="topbar-actions">
+            <div class="session-box">
+              <span data-role-label>Conectado</span>
+              <strong data-user-label>usuario</strong>
             </div>
+            <label class="search-box">
+              <span aria-hidden="true">Buscar</span>
+              <input id="searchInput" type="search" placeholder="Cliente, titulo, canal, status..." />
+            </label>
+            <button class="secondary-action" id="exportButton" type="button">Exportar</button>
+            <button class="secondary-action" id="logoutButton" type="button">Sair</button>
+            <button class="primary-action" data-add="post" type="button">Novo post</button>
+          </div>
+        </header>
 
-            <div class="table-wrap" id="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Nome</th>
-                    <th>CPF</th>
-                    <th>Telefone</th>
-                    <th>Responsável</th>
-                    <th>Data</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="leads-table"></tbody>
-              </table>
-              <p class="empty">Nenhum lead cadastrado.</p>
-            </div>
-          </section>
+        <section class="quick-actions" aria-label="Acoes rapidas">
+          <button type="button" data-add="client">
+            <span>Cliente</span>
+            Contato, status e operacao
+          </button>
+          <button type="button" data-add="post">
+            <span>Post</span>
+            Ideia, canal, etapa e prazo
+          </button>
+          <button type="button" data-add="agenda">
+            <span>Agenda</span>
+            Reuniao, publicacao ou gravacao
+          </button>
+          <button type="button" data-add="script">
+            <span>Roteiro</span>
+            Gancho, blocos e CTA
+          </button>
+          <button type="button" data-add="recording">
+            <span>Gravacao</span>
+            Local, equipamentos e tomadas
+          </button>
+        </section>
 
-          <section class="panel-tab" id="panel-users" hidden>
-            <div class="admin-tools">
-              <section class="user-manager">
-                <p class="eyebrow">Responsáveis</p>
-                <h2>Criar usuário</h2>
-                <form class="user-form" id="user-form">
-                  <label for="new-user-name">Nome da responsável</label>
-                  <input id="new-user-name" autocomplete="off" required />
+        <section class="view is-visible" id="dashboardView" aria-labelledby="dashboardTitle">
+          <div class="dashboard-grid">
+            <article class="metric-card">
+              <span class="metric-label">Posts em aberto</span>
+              <strong data-metric="openPosts">0</strong>
+              <p>Da ideia ate o agendamento.</p>
+            </article>
+            <article class="metric-card">
+              <span class="metric-label">Clientes ativos</span>
+              <strong data-metric="activeClients">0</strong>
+              <p>Operacoes em andamento.</p>
+            </article>
+            <article class="metric-card">
+              <span class="metric-label">Prazos em 7 dias</span>
+              <strong data-metric="weekDue">0</strong>
+              <p>Itens que precisam de atencao.</p>
+            </article>
+            <article class="metric-card">
+              <span class="metric-label">Roteiros pendentes</span>
+              <strong data-metric="pendingScripts">0</strong>
+              <p>Aguardando escrita ou revisao.</p>
+            </article>
+            <article class="metric-card">
+              <span class="metric-label">Gravacoes abertas</span>
+              <strong data-metric="openRecordings">0</strong>
+              <p>Pre-producao, gravando ou editando.</p>
+            </article>
+          </div>
 
-                  <label for="new-user-login">Login</label>
-                  <input id="new-user-login" autocomplete="off" required />
-
-                  <label for="new-user-password">Senha inicial</label>
-                  <input id="new-user-password" type="password" autocomplete="new-password" required />
-
-                  <p class="msg" id="user-message"></p>
-                  <button class="primary" id="create-user" type="submit" disabled>Criar responsável</button>
-                </form>
-              </section>
-
-              <section class="user-manager">
-                <p class="eyebrow">Senhas</p>
-                <h2>Usuários criados</h2>
-                <div class="table-wrap users-wrap" id="users-wrap">
-                  <table class="users-table">
-                    <thead>
-                      <tr>
-                        <th>Nome</th>
-                        <th>Login</th>
-                        <th>Perfil</th>
-                        <th>Nova senha</th>
-                        <th>Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody id="users-table"></tbody>
-                  </table>
-                  <p class="empty">Nenhum usuário cadastrado.</p>
+          <div class="content-columns">
+            <article class="panel wide-panel">
+              <div class="panel-header">
+                <div>
+                  <h2>Pipeline de posts</h2>
+                  <p>Volume por etapa da operacao.</p>
                 </div>
-              </section>
-            </div>
-          </section>
+              </div>
+              <div class="pipeline-board" data-pipeline></div>
+            </article>
 
-          <section class="panel-tab" id="panel-draw" hidden>
-            <div class="draw">
-              <div class="drawbox">
-                <p class="eyebrow">Sorteio</p>
-                <h2>Bola oficial da Copa do Mundo</h2>
-                <div class="count" id="countdown">10</div>
-                <p class="rolling" id="rolling-name">Aguardando participantes</p>
-                <p class="winner" id="winner-name"></p>
-                <button class="primary" id="draw-button" type="button">Sortear</button>
+            <article class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2>Agenda proxima</h2>
+                  <p>Compromissos ordenados por data.</p>
+                </div>
+              </div>
+              <div class="timeline-list" data-upcoming></div>
+            </article>
+          </div>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h2>Prioridades</h2>
+                <p>Conteudos com prazo mais curto e status aberto.</p>
               </div>
             </div>
-            <div class="participants" id="participants"></div>
-          </section>
+            <div class="priority-list" data-priorities></div>
+          </article>
+        </section>
+
+        <section class="view" id="clientsView" aria-label="Clientes">
+          <div class="view-toolbar">
+            <div class="filter-group" data-filter-group="clients"></div>
+            <button class="secondary-action" data-add="client" type="button">Adicionar cliente</button>
+          </div>
+          <div class="item-grid clients-grid" data-clients-list></div>
+        </section>
+
+        <section class="view" id="postsView" aria-label="Posts">
+          <div class="view-toolbar">
+            <div class="filter-group" data-filter-group="posts"></div>
+            <button class="secondary-action" data-add="post" type="button">Adicionar post</button>
+          </div>
+          <div class="kanban" data-posts-board></div>
+        </section>
+
+        <section class="view" id="agendaView" aria-label="Agenda">
+          <div class="view-toolbar">
+            <div class="filter-group" data-filter-group="agenda"></div>
+            <button class="secondary-action" data-add="agenda" type="button">Adicionar agenda</button>
+          </div>
+          <div class="calendar-layout">
+            <div class="calendar-strip" data-calendar-strip></div>
+            <div class="timeline-list large" data-agenda-list></div>
+          </div>
+        </section>
+
+        <section class="view" id="scriptsView" aria-label="Roteiros">
+          <div class="view-toolbar">
+            <div class="filter-group" data-filter-group="scripts"></div>
+            <button class="secondary-action" data-add="script" type="button">Adicionar roteiro</button>
+          </div>
+          <div class="item-grid" data-scripts-list></div>
+        </section>
+
+        <section class="view" id="recordingsView" aria-label="Gravacoes">
+          <div class="view-toolbar">
+            <div class="filter-group" data-filter-group="recordings"></div>
+            <button class="secondary-action" data-add="recording" type="button">Adicionar gravacao</button>
+          </div>
+          <div class="item-grid" data-recordings-list></div>
         </section>
       </main>
-    </section>
+    </div>
 
-    <div class="toast" id="toast"></div>
+    <dialog class="editor-dialog" id="editorDialog">
+      <form method="dialog" class="editor-shell" id="editorForm">
+        <header class="dialog-header">
+          <div>
+            <p class="eyebrow" data-dialog-kicker>Novo item</p>
+            <h2 data-dialog-title>Cadastro</h2>
+          </div>
+          <button class="icon-button" value="cancel" type="button" data-close-dialog aria-label="Fechar">
+            <span aria-hidden="true">X</span>
+          </button>
+        </header>
+
+        <div class="form-grid" data-form-fields></div>
+
+        <footer class="dialog-footer">
+          <button class="secondary-action" value="cancel" type="button" data-close-dialog>Cancelar</button>
+          <button class="danger-action" type="button" data-delete-item hidden>Excluir</button>
+          <button class="primary-action" value="default" type="submit">Salvar</button>
+        </footer>
+      </form>
+    </dialog>
+
+    <dialog class="editor-dialog" id="exportDialog">
+      <div class="editor-shell export-shell">
+        <header class="dialog-header">
+          <div>
+            <p class="eyebrow">Backup</p>
+            <h2>Dados exportados</h2>
+          </div>
+          <button class="icon-button" type="button" data-close-export aria-label="Fechar">
+            <span aria-hidden="true">X</span>
+          </button>
+        </header>
+        <textarea id="exportText" readonly></textarea>
+        <footer class="dialog-footer">
+          <button class="secondary-action" type="button" data-copy-export>Copiar dados</button>
+          <button class="primary-action" type="button" data-close-export>Concluir</button>
+        </footer>
+      </div>
+    </dialog>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
   </body>
 </html>
