@@ -70,8 +70,10 @@ button:disabled {
     radial-gradient(circle at 72% 45%, rgba(215, 179, 76, 0.2), transparent 34%),
     url("./assets/capa-sorteio.jpg"),
     linear-gradient(135deg, #050604 0%, #092c1d 48%, #d7b34c 120%);
-  background-position: center;
-  background-size: cover;
+  background-color: #050604;
+  background-position: center, center, center, center;
+  background-repeat: no-repeat;
+  background-size: cover, cover, contain, cover;
   opacity: 0;
   transform: scale(1.02);
   transition: opacity 0.28s ease, transform 0.28s ease;
@@ -738,11 +740,11 @@ td {
 @keyframes coverDrift {
   0%,
   100% {
-    background-position: center;
+    background-position: center, center, center, center;
   }
 
   50% {
-    background-position: 56% center;
+    background-position: center, 72% center, center, center;
   }
 }
 
