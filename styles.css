@@ -127,6 +127,24 @@ button:disabled {
   animation: greenBlink 2.8s ease-in-out infinite;
 }
 
+.draw-countdown {
+  position: relative;
+  z-index: 1;
+  width: min(540px, 100%);
+  margin: 10px 0 0;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 229, 121, 0.44);
+  border-radius: 8px;
+  background: rgba(19, 17, 7, 0.72);
+  color: #ffe579;
+  font-size: clamp(0.86rem, 1.4vw, 1rem);
+  font-weight: 950;
+  line-height: 1.2;
+  text-align: center;
+  text-transform: uppercase;
+  box-shadow: 0 0 28px rgba(255, 208, 64, 0.18);
+}
+
 .subtitle,
 .eyebrow {
   margin: 0;
@@ -164,11 +182,17 @@ button:disabled {
   background: rgba(4, 41, 31, 0.72);
 }
 
+.login.is-register-active .draw-countdown {
+  align-self: center;
+  width: min(560px, 100%);
+}
+
 .login.is-login-active .draw-cover {
   opacity: 0;
 }
 
-.login.is-login-active .blink-cta {
+.login.is-login-active .blink-cta,
+.login.is-login-active .draw-countdown {
   display: none;
 }
 

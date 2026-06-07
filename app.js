@@ -1,6 +1,7 @@
 const API_BASE = "https://bpxbxiesmarofnjztcpu.supabase.co/functions/v1/cartao-leads";
 const SESSION_KEY = "leadprospecSession";
 const SYNC_INTERVAL_MS = 1000;
+const DRAW_DATE = new Date("2026-06-08T18:00:00-03:00");
 
 const state = {
   session: null,
@@ -36,6 +37,7 @@ const siteMessage = $("site-message");
 const siteSave = $("site-save");
 const instagramLink = $("instagram-link");
 const ruazinhaLink = $("ruazinha-link");
+const drawCountdown = $("draw-countdown");
 const leadName = $("lead-name");
 const leadCpf = $("lead-cpf");
 const leadPhone = $("lead-phone");
@@ -91,6 +93,22 @@ function formatDate(value) {
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date(value));
+}
+
+function updateDrawCountdown() {
+  if (!drawCountdown) {
+    return;
+  }
+
+  const diff = DRAW_DATE.getTime() - Date.now();
+
+  if (diff <= 0) {
+    drawCountdown.textContent = "Sorteio marcado para segunda-feira, 08/06, às 18:00";
+    return;
+  }
+
+  const hours = Math.ceil(diff / (60 * 60 * 1000));
+  drawCountdown.textContent = `${hours === 1 ? "Falta" : "Faltam"} ${hours} ${hours === 1 ? "hora" : "horas"} para o sorteio`;
 }
 
 function escapeHtml(value) {
@@ -803,4 +821,6 @@ if (usersTable) {
 }
 
 loadSession();
+updateDrawCountdown();
+setInterval(updateDrawCountdown, 60 * 1000);
 renderSession();
